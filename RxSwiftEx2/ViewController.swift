@@ -16,18 +16,19 @@ class ViewController: UIViewController {
     
     let disposeBag = DisposeBag()
     let viewModel = FeedViewModel()
-    var articleList: [Article] = []
+    var articleSectionList: [ArticleSection] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
         bindViewModel()
         loadFeedOfTheDay()
+        //search(for: "bangkok")
     }
 
     func bindViewModel() {
-        viewModel.articleList.asObservable()
-            .subscribe(onNext: { articleList in
-                self.articleList = articleList
+        viewModel.articleSections.asObservable()
+            .subscribe(onNext: { articleSectionList in
+                self.articleSectionList = articleSectionList
                 self.tableView.reloadData()
             })
             .disposed(by: disposeBag)
@@ -41,6 +42,15 @@ class ViewController: UIViewController {
             .disposed(by: disposeBag)
     }
     
+    func search(for title: String) {
+        viewModel.search(by: title)
+            .subscribe(onNext: { result in
+                self.articleSectionList = result
+                self.tableView.reloadData()
+            })
+            .disposed(by: disposeBag)
+    }
+    
     deinit {
         print("deinit ViewController");
     }
@@ -50,28 +60,29 @@ class ViewController: UIViewController {
 //MARK:- UITableViewDelegate
 extension ViewController: UITableViewDelegate, UITableViewDataSource {
     func numberOfSections(in tableView: UITableView) -> Int {
-        return 1
+        return articleSectionList.count
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return articleList.count
+        return articleSectionList[section].articles?.count ?? 0
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        //guard
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
-       //     as? UITableViewCell else {
-       //     return UITableViewCell()
-       // }
-        
-        let article = articleList[indexPath.row]
-        cell.textLabel?.text = article.normalizedtitle
+        if let article = articleSectionList[indexPath.section].articles?[indexPath.row] {
+            cell.textLabel?.text = article.normalizedtitle
+        }
         return cell
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let artilce = articleList[indexPath.row]
-        performSegue(withIdentifier: "ArticleDetail", sender: artilce)
+        if let article = articleSectionList[indexPath.section].articles?[indexPath.row] {
+            performSegue(withIdentifier: "ArticleDetail", sender: article)
+        }
+    }
+    
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        return articleSectionList[section].title
     }
     
 }

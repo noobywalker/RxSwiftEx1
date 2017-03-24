@@ -12,7 +12,9 @@ import SwiftyJSON
 
 class FeedViewModel {
     
-    var articleList: Variable<[Article]> = Variable([])
+    var articleSections: Variable<[ArticleSection]> = Variable([])
+    
+    var todayArticle: [Article] = []
     
     func requestFeed(date: String, month: String, year: String) -> Observable<Void> {
         
@@ -20,11 +22,48 @@ class FeedViewModel {
             .mapJSON()
             .map { json in
                 let articleJson = JSON(json)
-                self.articleList.value = articleJson["mostread"]["articles"].arrayValue.flatMap { Article(json: $0) }
+                let articleList = articleJson["mostread"]["articles"].arrayValue.flatMap { Article(json: $0) }
+                let seciton = ArticleSection(title: "Today", articles: articleList)
+                self.articleSections.value = [seciton]
             }
+    }
+    
+    func search(by title: String) -> Observable<[ArticleSection]> {
+        return randomArticle().flatMapLatest { randomArticlesSection -> Observable<[ArticleSection]> in
+            return self.related(by: title).flatMap { searchResultSection -> Observable<[ArticleSection]> in
+                return .just([searchResultSection, randomArticlesSection])
+            }
+        }
+    }
+    
+    private func randomArticle() -> Observable<ArticleSection> {
+        return ApiProvider.request(.randomArticle)
+            .mapJSON()
+            .flatMap { (json) -> Observable<ArticleSection> in
+                let articleJson = JSON(json)
+                let articles = articleJson["pages"].arrayValue.flatMap { Article(json: $0) }
+                let seciton = ArticleSection(title: "You May Be Interested", articles: articles)
+                return .just(seciton)
+        }
+    }
+    
+    private func related(by title: String) -> Observable<ArticleSection> {
+        let searchTile = title.replacingOccurrences(of: " ", with: "_")
+        return ApiProvider.request(.relate(title: searchTile))
+            .mapJSON()
+            .flatMap { json -> Observable<ArticleSection> in
+                let articleJson = JSON(json)
+                let articles = articleJson["pages"].arrayValue.flatMap { Article(json: $0) }
+                let seciton = ArticleSection(title: "Result", articles: articles)
+                return .just(seciton)
+        }
     }
 }
 
+struct ArticleSection {
+    var title: String?
+    var articles: [Article]?
+}
 
 struct Article {
     var pageId: Int?
