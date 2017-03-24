@@ -1,11 +1,20 @@
 platform :ios, '9.0'
+use_frameworks!
+
+workspace 'RxSwiftEx'
 
 target 'RxSwiftEx1' do
-  use_frameworks!
+  project 'RxSwiftEx1.xcodeproj'
   pod 'RxSwift'
   pod 'RxCocoa'
-  #pod 'Moya/RxSwift'
-  #pod 'SwiftyJSON'
-  #pod 'ObjectMapper'
-  #pod 'Nuke'
+end
+
+target 'RxSwiftEx2' do
+    project 'RxSwiftEx2.xcodeproj'
+    pod 'RxSwift'
+    pod 'RxCocoa'
+    pod 'Moya/RxSwift'
+    pod 'SwiftyJSON'
+    pod 'ObjectMapper'
+    pod 'Nuke'
 end
