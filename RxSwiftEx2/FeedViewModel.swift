@@ -13,8 +13,7 @@ import SwiftyJSON
 class FeedViewModel {
     
     var articleSections: Variable<[ArticleSection]> = Variable([])
-    
-    var todayArticle: [Article] = []
+    var todayArticle: ArticleSection?
     
     func requestFeed(date: String, month: String, year: String) -> Observable<Void> {
         
